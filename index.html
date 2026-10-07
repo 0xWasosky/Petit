@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bar Petit 2.0 | Chivasso</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: #161616;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --accent: #d4af37; /* Oro elegante */
+            --accent-glow: rgba(212, 175, 55, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Navigazione fissa con sfocatura */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 1.5rem;
+            text-align: center;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            color: var(--accent);
+            font-size: 0.8rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* Sezione benvenuto */
+        .hero {
+            height: 35vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1a1a1a 0%, var(--bg-dark) 100%);
+            margin-top: 90px;
+        }
+
+        .hero h2 {
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        /* Contenitore principale */
+        .menu-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem 5rem 1.5rem;
+        }
+
+        .category-title {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin: 3rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #333;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Stile schede piatti */
+        .menu-item {
+            background-color: var(--bg-card);
+            padding: 1.2rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid transparent;
+            
+            /* Animazione iniziale */
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .menu-item:hover {
+            transform: translateY(-4px) scale(1.01);
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px var(--accent-glow);
+            background-color: #1a1a1a;
+        }
+
+        .item-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .item-price {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .menu-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .loader {
+            text-align: center;
+            padding: 4rem 0;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Petit 2.0</h1>
+        <div class="subtitle">Chivasso</div>
+    </header>
+
+    <div class="hero">
+        <h2>Il Nostro Menu</h2>
+    </div>
+
+    <main class="menu-container" id="menu-output">
+        <div class="loader" id="loader">Caricamento menu in corso...</div>
+    </main>
+
+    <script>
+        const pubUrl = 'https://docs.google.com/document/d/e/2PACX-1vROJfZ0xInTN16ea12HeHcT7Lu7CFgir6MurumLevIqwQ9jwPJcMHk7tCFaGU_Rorxi5yb_GGOmABvM/pub?embedded=true';
+
+        const menuOutput = document.getElementById('menu-output');
+        const loader = document.getElementById('loader');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        fetch(pubUrl)
+            .then(response => response.text())
+            .then(htmlText => {
+                loader.style.display = 'none';
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const paragraphs = doc.querySelectorAll('p');
+                
+                paragraphs.forEach(p => {
+                    let text = p.textContent.trim();
+                    if (!text) return;
+
+                    if (text.endsWith(':')) {
+                        const catTitle = document.createElement('h3');
+                        catTitle.className = 'category-title';
+                        catTitle.textContent = text.replace(':', '');
+                        menuOutput.appendChild(catTitle);
+                    } 
+                    else if (text.includes('-')) {
+                        text = text.replace(/^[\s\-*]+/, ''); 
+                        const parts = text.split('-');
+                        const name = parts[0].trim();
+                        const price = parts[1] ? parts[1].trim() : '';
+
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'menu-item';
+                        itemDiv.innerHTML = `
+                            <div class="item-name">${name}</div>
+                            <div class="item-price">${price}</div>
+                        `;
+
+                        menuOutput.appendChild(itemDiv);
+                        observer.observe(itemDiv);
+                    }
+                });
+            })
+            .catch(error => {
+                loader.innerText = "Impossibile caricare il menu. Controlla la connessione.";
+                console.error(error);
+            });
+    </script>
+</body>
+</html>
